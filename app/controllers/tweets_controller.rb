@@ -1,8 +1,7 @@
 class TweetsController < ApplicationController
   before_action :set_tweet, only: [:edit, :show]
   before_action :move_to_index, except: [:index, :show, :search]
-  
-  
+
   def index
     # @tweets = Tweet.includes(:user).order("created_at DESC")
     query = "SELECT * FROM tweets"
@@ -13,8 +12,16 @@ class TweetsController < ApplicationController
     @tweet = Tweet.new
   end
 
-  def create 
-    Tweet.create(tweet_params)
+  def create
+    @tweet = Tweet.new(tweet_params)
+    #バリデーションで問題があれば、保存はされず「投稿画面」に戻る
+    if @tweet.valid?
+      @tweet.save
+      redirect_to root_path
+    else
+      #保存されなければ、newに戻る
+      render "new"
+    end
   end
 
   def destroy
@@ -25,7 +32,7 @@ class TweetsController < ApplicationController
   def edit
   end
 
-  def update 
+  def update
     tweet = Tweet.find(params[:id])
     tweet.update(tweet_params)
   end
@@ -38,8 +45,8 @@ class TweetsController < ApplicationController
   def search
     @tweets = SearchTweetsService.search(params[:keyword])
   end
-  
-  private 
+
+  private
 
   def tweet_params
     params.require(:tweet).permit(:image, :text).merge(user_id: current_user.id)
